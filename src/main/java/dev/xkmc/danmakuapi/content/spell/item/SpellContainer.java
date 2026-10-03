@@ -25,10 +25,10 @@ public class SpellContainer extends ConditionalToken {
 	public static void castSpell(ServerPlayer sp, Supplier<? extends ItemSpell> sup, @Nullable LivingEntity target) {
 		ItemSpell spell = sup.get();
 		spell.start(sp, target);
-		L2LibReg.CONDITIONAL.type().getOrCreate(sp).getOrCreateData(SPELL, SpellContainer::new).spells.add(spell);
+		L2LibReg.PLAYER_CONDITIONAL.type().getOrCreate(sp).getOrCreateData(SPELL, SpellContainer::new).spells.add(spell);
 	}
 	public static void clear(ServerPlayer sp) {
-		var data = L2LibReg.CONDITIONAL.type().getOrCreate(sp).getOrCreateData(SPELL, SpellContainer::new);
+		var data = L2LibReg.PLAYER_CONDITIONAL.type().getOrCreate(sp).getOrCreateData(SPELL, SpellContainer::new);
 		for (var spell : data.spells) {
 			for (var e : spell.cache) {
 				e.markErased(true);
@@ -42,7 +42,7 @@ public class SpellContainer extends ConditionalToken {
 	}
 
 	public static void track(ServerPlayer sp, SimplifiedProjectile e) {
-		var data = L2LibReg.CONDITIONAL.type().getOrCreate(sp).getOrCreateData(SPELL, SpellContainer::new);
+		var data = L2LibReg.PLAYER_CONDITIONAL.type().getOrCreate(sp).getOrCreateData(SPELL, SpellContainer::new);
 		data.cache.add(e);
 	}
 
@@ -52,7 +52,7 @@ public class SpellContainer extends ConditionalToken {
 	private final List<SimplifiedProjectile> cache = new LinkedList<>();
 
 	@Override
-	public boolean tick(Player player) {
+	public boolean tick(LivingEntity player) {
 		var itr = spells.iterator();
 		while (itr.hasNext()) {
 			var spell = itr.next();

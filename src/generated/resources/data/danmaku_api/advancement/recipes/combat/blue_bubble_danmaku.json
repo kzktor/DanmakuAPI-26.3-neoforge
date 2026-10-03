@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:blue_bubble_danmaku"
+        "recipes": "danmaku_api:blue_bubble_danmaku"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

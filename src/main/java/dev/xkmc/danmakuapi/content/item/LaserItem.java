@@ -20,16 +20,17 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.NeoForge;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 public class LaserItem extends Item {
 
@@ -52,26 +53,26 @@ public class LaserItem extends Item {
  * this method.
 	 */
 	@Override
-	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+	public InteractionResult use(Level level, Player player, InteractionHand hand) {
 		ItemStack stack = player.getItemInHand(hand);
 		if (GrazeHelper.forbidDanmaku(player))
-			return InteractionResultHolder.fail(stack);
+			return InteractionResult.FAIL;
 
 		var event = new DanmakuUseEvent(player, stack, cooldown());
 		NeoForge.EVENT_BUS.post(event);
 		if (event.isCanceled()) {
-			return InteractionResultHolder.fail(stack);
+			return InteractionResult.FAIL;
 		}
 		playThrowSound(level, player);
-		if (!level.isClientSide) {
+		if (!level.isClientSide()) {
 			spawnLaser(newLaser(player, level), player, level, event);
 		}
 		player.awardStat(Stats.ITEM_USED.get(this));
-		player.getCooldowns().addCooldown(this, event.getCooldown());
+		player.getCooldowns().addCooldown(stack, event.getCooldown());
 		if (consume() && event.consume()) {
 			stack.shrink(1);
 		}
-		return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+		return InteractionResult.SUCCESS;
 	}
 
 	/**
@@ -168,8 +169,8 @@ public class LaserItem extends Item {
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, TooltipContext level, List<Component> list, TooltipFlag flag) {
-		list.add(DanmakuLang.DANMAKU_DAMAGE.get(type.damage()));
+	public void appendHoverText(ItemStack stack, TooltipContext level, TooltipDisplay display, Consumer<Component> list, TooltipFlag flag) {
+		list.accept(DanmakuLang.DANMAKU_DAMAGE.get(type.damage()));
 	}
 
 	/**

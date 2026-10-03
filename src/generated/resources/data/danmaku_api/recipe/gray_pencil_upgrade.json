@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shapeless",
   "category": "equipment",
   "ingredients": [
-    {
-      "item": "danmaku_api:gray_ball_danmaku"
-    },
-    {
-      "item": "danmaku_api:gray_laser"
-    }
+    "danmaku_api:gray_ball_danmaku",
+    "danmaku_api:gray_laser"
   ],
   "result": {
     "count": 4,

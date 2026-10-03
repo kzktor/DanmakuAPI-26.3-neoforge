@@ -5,10 +5,12 @@ import net.minecraft.client.particle.DustParticleBase;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.client.renderer.LightTexture;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.util.RandomSource;
 
+// 26.3: @OnlyIn no longer strips members at runtime, so it only produced a startup warning
+// (NeoForge OnlyInWarningsHandler). The nested Provider is client-only and is only referenced
+// from the client registration path, so the annotation is simply gone.
 public class DanmakuPoofParticle extends DustParticleBase<DanmakuPoofParticleOptions> {
 
 	protected DanmakuPoofParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, DanmakuPoofParticleOptions options, SpriteSet sprites) {
@@ -19,11 +21,11 @@ public class DanmakuPoofParticle extends DustParticleBase<DanmakuPoofParticleOpt
 		this.bCol = this.randomizeColor(options.getColor().z(), f);
 	}
 
-	public int getLightColor(float pTick) {
-		return LightTexture.FULL_BRIGHT;
+	@Override
+	protected int getLightCoords(float pTick) {
+		return LightCoordsUtil.FULL_BRIGHT;
 	}
 
-	@OnlyIn(Dist.CLIENT)
 	public static class Provider implements ParticleProvider<DanmakuPoofParticleOptions> {
 		private final SpriteSet sprites;
 
@@ -31,7 +33,7 @@ public class DanmakuPoofParticle extends DustParticleBase<DanmakuPoofParticleOpt
 			this.sprites = sprites;
 		}
 
-		public Particle createParticle(DanmakuPoofParticleOptions type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+		public Particle createParticle(DanmakuPoofParticleOptions type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, RandomSource random) {
 			return new DanmakuPoofParticle(level, x, y, z, xSpeed, ySpeed, zSpeed, type, this.sprites);
 		}
 	}

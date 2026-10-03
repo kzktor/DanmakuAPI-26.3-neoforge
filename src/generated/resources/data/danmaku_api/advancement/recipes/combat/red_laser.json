@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:red_laser"
+        "recipes": "danmaku_api:red_laser"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:light_gray_star_danmaku"
+        "recipes": "danmaku_api:light_gray_star_danmaku"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -17,6 +17,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TraceableEntity;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -170,22 +172,21 @@ public class DanmakuLaserEntity extends BaseLaser implements IEntityWithComplexS
 		}
 	}
 
+	// 26.3: Entity#getBoundingBoxForCulling is gone; the culling box is provided by the renderer
+	// through EntityRenderer#getBoundingBoxForCulling(T, float) - see ItemLaserRenderer.
+
 	@Override
-	public AABB getBoundingBoxForCulling() {
-		var src = position().add(0, getBbHeight() / 2f, 0);
-		return new AABB(src, src.add(getForward().scale(length))).inflate(getBbWidth() / 2f);
-	}
-
-	public void addAdditionalSaveData(CompoundTag nbt) {
+	protected void addAdditionalSaveData(ValueOutput nbt) {
 		super.addAdditionalSaveData(nbt);
-		nbt.put("auto-serial", Objects.requireNonNull(new TagCodec(level().registryAccess()).toTag(new CompoundTag(), this)));
+		nbt.store("auto-serial", CompoundTag.CODEC,
+				Objects.requireNonNull(new TagCodec(level().registryAccess()).toTag(new CompoundTag(), this)));
 	}
 
-	public void readAdditionalSaveData(CompoundTag nbt) {
+	@Override
+	protected void readAdditionalSaveData(ValueInput nbt) {
 		super.readAdditionalSaveData(nbt);
-		if (nbt.contains("auto-serial")) {
-			Wrappers.run(() -> new TagCodec(level().registryAccess()).fromTag(nbt.getCompound("auto-serial"), getClass(), this));
-		}
+		nbt.read("auto-serial", CompoundTag.CODEC).ifPresent(tag ->
+				Wrappers.run(() -> new TagCodec(level().registryAccess()).fromTag(tag, getClass(), this)));
 	}
 
 	@Override

@@ -35,13 +35,13 @@ public class DanmakuDamageTypes extends DamageTypeAndTagsGen {
 
 	public static DamageSource danmaku(IDanmakuEntity self) {
 		return new DamageSource(self.self().level().registryAccess()
-				.registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DANMAKU), self.self(),
+				.lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(DANMAKU), self.self(),
 				self.self().getOwner());
 	}
 
 	public static DamageSource abyssal(IDanmakuEntity self) {
 		return new DamageSource(self.self().level().registryAccess()
-				.registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ABYSSAL), self.self(),
+				.lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(ABYSSAL), self.self(),
 				self.self().getOwner());
 	}
 

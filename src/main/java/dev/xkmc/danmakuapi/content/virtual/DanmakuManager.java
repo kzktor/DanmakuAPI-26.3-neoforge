@@ -16,7 +16,7 @@ public class DanmakuManager {
 		if (proj.isEmpty()) return;
 		if (user.level() instanceof ServerLevel sl) {
 			// targeting state is owner-level, so evaluate once per player for the whole batch
-			for (ServerPlayer sp : sl.getChunkSource().chunkMap.getPlayers(new ChunkPos(user.blockPosition()), false)) {
+			for (ServerPlayer sp : sl.getChunkSource().chunkMap.getPlayers(ChunkPos.containing(user.blockPosition()), false)) {
 				boolean friendly = !IDanmakuEntity.canHurt(user, sp);
 				DanmakuAPI.HANDLER.toClientPlayer(DanmakuToClientPacket.of(user.registryAccess(), proj, friendly), sp);
 			}

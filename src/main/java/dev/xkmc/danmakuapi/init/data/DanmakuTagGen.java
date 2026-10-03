@@ -21,18 +21,18 @@ public class DanmakuTagGen {
 	}
 
 	public static void genItemTag(RegistrateItemTagsProvider pvd) {
-		var danmaku = pvd.addTag(DANMAKU);
+		var danmaku = pvd.tag(DANMAKU);
 		for (var e : DanmakuItems.Bullet.values()) {
 			danmaku.addTag(e.tag);
 		}
-		var laser = pvd.addTag(LASER);
+		var laser = pvd.tag(LASER);
 		for (var e : DanmakuItems.Laser.values()) {
 			laser.addTag(e.tag);
 		}
-		pvd.addTag(PRESET_SPELL);
-		pvd.addTag(DANMAKU_SHOOTER).addTags(DANMAKU, LASER, CUSTOM_SPELL, PRESET_SPELL);
-		pvd.addTag(ItemTags.create(Tags.HIDDEN_FROM_RECIPE_VIEWERS))
-				.addTags(DANMAKU, LASER);
+		pvd.tag(PRESET_SPELL);
+		pvd.tag(DANMAKU_SHOOTER).addTag(DANMAKU).addTag(LASER).addTag(CUSTOM_SPELL).addTag(PRESET_SPELL);
+		pvd.tag(ItemTags.create(Tags.HIDDEN_FROM_RECIPE_VIEWERS))
+				.addTag(DANMAKU).addTag(LASER);
 	}
 
 }

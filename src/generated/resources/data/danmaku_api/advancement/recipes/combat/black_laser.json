@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:black_laser"
+        "recipes": "danmaku_api:black_laser"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

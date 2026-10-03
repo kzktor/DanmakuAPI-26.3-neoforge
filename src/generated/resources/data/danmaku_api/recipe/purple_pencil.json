@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "A": {
-      "tag": "danmaku_api:laser/pencil"
-    },
-    "B": {
-      "item": "minecraft:purple_dye"
-    }
+    "A": "#danmaku_api:laser/pencil",
+    "B": "minecraft:purple_dye"
   },
   "pattern": [
     "AAA",

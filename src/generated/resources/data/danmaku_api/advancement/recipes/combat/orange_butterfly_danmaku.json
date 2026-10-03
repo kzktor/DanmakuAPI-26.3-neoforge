@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:orange_butterfly_danmaku"
+        "recipes": "danmaku_api:orange_butterfly_danmaku"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

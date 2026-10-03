@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "A": {
-      "tag": "danmaku_api:danmaku/bubble"
-    },
-    "B": {
-      "item": "minecraft:blue_dye"
-    }
+    "A": "#danmaku_api:danmaku/bubble",
+    "B": "minecraft:blue_dye"
   },
   "pattern": [
     "AAA",

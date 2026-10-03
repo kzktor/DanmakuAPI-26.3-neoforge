@@ -5,7 +5,7 @@ import dev.xkmc.danmakuapi.content.custom.editor.SpellOptionInstances;
 import dev.xkmc.danmakuapi.init.data.DanmakuConfig;
 import dev.xkmc.danmakuapi.init.data.DanmakuLang;
 import dev.xkmc.l2serial.util.Wrappers;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.OptionsList;
 import net.minecraft.client.gui.components.Tooltip;
@@ -93,9 +93,9 @@ public class EditorScreen extends OptionsSubScreen {
 	}
 
 	@Override
-	public void render(GuiGraphics g, int mx, int my, float pTick) {
-		renderBackground(g, mx, my, pTick);
-		super.render(g, mx, my, pTick);
+	public void extractRenderState(GuiGraphicsExtractor g, int mx, int my, float pTick) {
+		extractBackground(g, mx, my, pTick);
+		super.extractRenderState(g, mx, my, pTick);
 	}
 
 }

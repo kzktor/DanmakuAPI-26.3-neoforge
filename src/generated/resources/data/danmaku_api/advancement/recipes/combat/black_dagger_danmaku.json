@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:black_dagger_danmaku"
+        "recipes": "danmaku_api:black_dagger_danmaku"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

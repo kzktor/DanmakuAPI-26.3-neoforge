@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:green_spark_danmaku"
+        "recipes": "danmaku_api:green_spark_danmaku"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

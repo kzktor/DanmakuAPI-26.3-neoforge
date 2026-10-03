@@ -1,0 +1,12 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "danmaku_api:item/orange_laser",
+    "tints": [
+      {
+        "type": "minecraft:constant",
+        "value": 15435844
+      }
+    ]
+  }
+}

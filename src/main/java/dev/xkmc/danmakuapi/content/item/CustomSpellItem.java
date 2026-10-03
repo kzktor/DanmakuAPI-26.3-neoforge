@@ -6,21 +6,22 @@ import dev.xkmc.danmakuapi.content.custom.screen.ClientCustomSpellHandler;
 import dev.xkmc.danmakuapi.content.spell.item.SpellContainer;
 import dev.xkmc.danmakuapi.init.data.DanmakuLang;
 import dev.xkmc.danmakuapi.init.registrate.DanmakuItems;
-import dev.xkmc.l2library.content.raytrace.IGlowingTarget;
-import dev.xkmc.l2library.content.raytrace.RayTraceUtil;
+import dev.xkmc.l2core.content.raytrace.IGlowingTarget;
+import dev.xkmc.l2core.content.raytrace.RayTraceUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 public class CustomSpellItem extends Item implements IGlowingTarget {
 
@@ -38,9 +39,9 @@ public class CustomSpellItem extends Item implements IGlowingTarget {
 	}
 
 	@Override
-	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+	public InteractionResult use(Level level, Player player, InteractionHand hand) {
 		ItemStack stack = player.getItemInHand(hand);
-		if (hand != InteractionHand.MAIN_HAND) return InteractionResultHolder.fail(stack);
+		if (hand != InteractionHand.MAIN_HAND) return InteractionResult.FAIL;
 		ISpellFormData<?> data = getData(stack);
 		if (player.isShiftKeyDown()) {
 			if (level.isClientSide()) {
@@ -49,29 +50,29 @@ public class CustomSpellItem extends Item implements IGlowingTarget {
 		} else {
 			LivingEntity target = RayTraceUtil.serverGetTarget(player);
 			if (requireTarget && target == null)
-				return InteractionResultHolder.fail(stack);
+				return InteractionResult.FAIL;
 			if (!player.getAbilities().instabuild) {
 				Item ammo = data.getAmmoCost();
 				int toCost = data.cost();
 				if (!consumeAmmo(ammo, toCost, player, false))
-					return InteractionResultHolder.fail(stack);
+					return InteractionResult.FAIL;
 				if (player instanceof ServerPlayer)
 					consumeAmmo(ammo, toCost, player, true);
 			}
 			if (player instanceof ServerPlayer sp) {
 				SpellContainer.castSpell(sp, data::createInstance, target);
-				player.getCooldowns().addCooldown(this, data.getDuration());
+				player.getCooldowns().addCooldown(stack, data.getDuration());
 			}
 		}
-		return InteractionResultHolder.success(stack);
+		return InteractionResult.SUCCESS;
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> list, TooltipFlag flag) {
+	public void appendHoverText(ItemStack stack, TooltipContext ctx, TooltipDisplay display, Consumer<Component> list, TooltipFlag flag) {
 		ISpellFormData<?> data = getData(stack);
-		list.add(DanmakuLang.SPELL_COST.get(data.cost(), data.getAmmoCost().getDefaultInstance().getHoverName()));
+		list.accept(DanmakuLang.SPELL_COST.get(data.cost(), data.getAmmoCost().getDefaultInstance().getHoverName()));
 		if (requireTarget) {
-			list.add(DanmakuLang.SPELL_TARGET.get());
+			list.accept(DanmakuLang.SPELL_TARGET.get());
 		}
 	}
 
@@ -89,12 +90,8 @@ public class CustomSpellItem extends Item implements IGlowingTarget {
 		return toCost == 0;
 	}
 
-	@Override
-	public void inventoryTick(ItemStack stack, Level level, Entity user, int slot, boolean sel) {
-		if (user instanceof Player player && level.isClientSide && sel) {
-			RayTraceUtil.clientUpdateTarget(player, 64);
-		}
-	}
+	// 26.3: Item#inventoryTick now runs server-side only; the client raycast is driven by
+	// IGlowingTarget/IClientTickItem#clientMainHandTick instead.
 
 	@Override
 	public int getDistance(ItemStack stack) {

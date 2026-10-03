@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:white_circle_danmaku"
+        "recipes": "danmaku_api:white_circle_danmaku"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

@@ -13,7 +13,7 @@ import dev.xkmc.l2core.init.reg.registrate.L2Registrate;
 import dev.xkmc.l2core.init.reg.registrate.SimpleEntry;
 import dev.xkmc.l2core.init.reg.simple.Reg;
 import dev.xkmc.l2serial.network.PacketHandler;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.DyeColor;
 import net.neoforged.bus.api.EventPriority;
@@ -24,7 +24,7 @@ import net.neoforged.neoforge.data.event.GatherDataEvent;
 import org.slf4j.Logger;
 
 @Mod(DanmakuAPI.MODID)
-@EventBusSubscriber(modid = DanmakuAPI.MODID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = DanmakuAPI.MODID)
 public class DanmakuAPI {
 
 	public static final String MODID = "danmaku_api";
@@ -44,16 +44,20 @@ public class DanmakuAPI {
 		DanmakuConfig.init();
 	}
 
+	// 26.3: GatherDataEvent is abstract/sealed; listeners must target the concrete Client (or Server)
+	// subclass. Registering for the base class throws at mod construction ("Cannot register listeners
+	// for abstract class ... GatherDataEvent"), which stopped the dedicated server. Registrate itself
+	// subscribes to GatherDataEvent.Client, and the project's data run uses clientData().
 	@SubscribeEvent(priority = EventPriority.HIGH)
-	public static void gatherData(GatherDataEvent event) {
+	public static void gatherData(GatherDataEvent.Client event) {
 		REGISTRATE.addDataGenerator(ProviderType.LANG, DanmakuLang::genLang);
 		REGISTRATE.addDataGenerator(ProviderType.RECIPE, DanmakuRecipeGen::genRecipes);
 		REGISTRATE.addDataGenerator(ProviderType.ITEM_TAGS, DanmakuTagGen::genItemTag);
 		new DanmakuDamageTypes(REGISTRATE).generate();
 	}
 
-	public static ResourceLocation loc(String id) {
-		return ResourceLocation.fromNamespaceAndPath(MODID, id);
+	public static Identifier loc(String id) {
+		return Identifier.fromNamespaceAndPath(MODID, id);
 	}
 
 }

@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:white_pencil"
+        "recipes": "danmaku_api:white_pencil"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:cyan_laser"
+        "recipes": "danmaku_api:cyan_laser"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -15,9 +15,10 @@ public interface IYoukaiEntity {
 
 	default void danmakuHitTarget(IDanmakuEntity self, DamageSource source, LivingEntity target) {
 		float hp = target.getHealth();
-		boolean immune = !target.hurt(source, self.damage(target));
+		// 26.3: Entity#hurt returns void (it dispatches to hurtServer/hurtClient).
+		target.hurt(source, self.damage(target));
 		float ahp = target.getHealth();
-		if (ahp >= hp && ahp > 0) immune = true;
+		boolean immune = ahp >= hp && ahp > 0;
 		onDanmakuHit(target, self);
 		if (immune) {
 			onDanmakuImmune(target, self, source);

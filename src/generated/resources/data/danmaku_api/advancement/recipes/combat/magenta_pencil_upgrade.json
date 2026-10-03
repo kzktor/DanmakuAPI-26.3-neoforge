@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:magenta_pencil_upgrade"
+        "recipes": "danmaku_api:magenta_pencil_upgrade"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

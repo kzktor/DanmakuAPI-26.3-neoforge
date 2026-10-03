@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:white_pencil_upgrade"
+        "recipes": "danmaku_api:white_pencil_upgrade"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

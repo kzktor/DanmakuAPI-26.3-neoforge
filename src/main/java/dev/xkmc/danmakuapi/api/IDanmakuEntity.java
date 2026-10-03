@@ -86,7 +86,7 @@ public interface IDanmakuEntity extends GrazingEntity {
 	}
 
 	default void hurtTarget(EntityHitResult result) {
-		if (self().level().isClientSide) return;
+		if (self().level().isClientSide()) return;
 		var e = result.getEntity();
 		DamageSource source = source();
 		LivingEntity target = null;

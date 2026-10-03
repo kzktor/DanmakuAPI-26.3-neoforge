@@ -5,15 +5,15 @@ import dev.xkmc.danmakuapi.init.data.DanmakuConfig;
 import dev.xkmc.fastprojectileapi.entity.SimplifiedProjectile;
 import dev.xkmc.fastprojectileapi.render.ProjectileRenderer;
 import dev.xkmc.fastprojectileapi.render.RenderableProjectileType;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
 import java.util.List;
 import java.util.function.Consumer;
 
-public record PencilLayerLaserType(ResourceLocation inner, ResourceLocation outer, int color)
+public record PencilLayerLaserType(Identifier inner, Identifier outer, int color)
 		implements RenderableProjectileType<PencilLayerLaserType, PencilLayerLaserType.Ins> {
 
 	@Override
@@ -22,29 +22,31 @@ public record PencilLayerLaserType(ResourceLocation inner, ResourceLocation oute
 	}
 
 	@Override
-	public void start(MultiBufferSource buffer, List<Ins> list) {
+	public void start(SubmitNodeCollector collector, PoseStack pose, List<Ins> list) {
 		boolean additive = DanmakuConfig.CLIENT.laserRenderAdditive.get();
 		boolean invert = DanmakuConfig.CLIENT.laserRenderInverted.get();
 		int n = list.size() * 4;
-		int count = 1;
-		if (invert || !additive) count++;
-		BulkDataWriter vc;
-		vc = new BulkDataWriter(buffer.getBuffer(DanmakuRenderStates.laser(inner, DisplayType.TRANSPARENT)), n * count);
-		for (var e : list) {
-			e.texInner(vc, e.core);
-		}
-		if (invert || !additive) {
+		final int count = (invert || !additive) ? 2 : 1;
+		collector.submitCustomGeometry(pose, DanmakuRenderStates.laser(inner, DisplayType.TRANSPARENT), (entry, vc) -> {
+			BulkDataWriter writer = new BulkDataWriter(vc, n * count);
 			for (var e : list) {
-				e.texOuter(invert, vc, e.tran);
+				e.texInner(writer, e.core);
 			}
-		}
-		vc.flush();
+			if (invert || !additive) {
+				for (var e : list) {
+					e.texOuter(invert, writer, e.tran);
+				}
+			}
+			writer.flush();
+		});
 		if (additive) {
-			vc = new BulkDataWriter(buffer.getBuffer(DanmakuRenderStates.laser(outer, DisplayType.ADDITIVE)), n);
-			for (var e : list) {
-				e.texOuter(false, vc, e.add);
-			}
-			vc.flush();
+			collector.submitCustomGeometry(pose, DanmakuRenderStates.laser(outer, DisplayType.ADDITIVE), (entry, vc) -> {
+				BulkDataWriter writer = new BulkDataWriter(vc, n);
+				for (var e : list) {
+					e.texOuter(false, writer, e.add);
+				}
+				writer.flush();
+			});
 		}
 	}
 

@@ -3,6 +3,7 @@ package dev.xkmc.danmakuapi.content.virtual;
 import dev.xkmc.fastprojectileapi.entity.SimplifiedProjectile;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,7 +12,7 @@ class DanmakuClientHandler {
 	public static @Nullable Entity create(EntityType<?> type) {
 		var level = Minecraft.getInstance().level;
 		if (level == null) return null;
-		return type.create(level);
+		return type.create(level, EntitySpawnReason.COMMAND);
 	}
 
 	public static void add(SimplifiedProjectile sp) {

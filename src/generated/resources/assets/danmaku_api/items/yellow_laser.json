@@ -1,0 +1,12 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "danmaku_api:item/yellow_laser",
+    "tints": [
+      {
+        "type": "minecraft:constant",
+        "value": 14602026
+      }
+    ]
+  }
+}

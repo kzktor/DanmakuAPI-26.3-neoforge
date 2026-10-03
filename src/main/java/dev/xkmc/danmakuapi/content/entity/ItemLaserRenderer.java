@@ -8,34 +8,69 @@ import dev.xkmc.danmakuapi.content.item.LaserItem;
 import dev.xkmc.danmakuapi.init.data.DanmakuConfig;
 import dev.xkmc.fastprojectileapi.entity.SimplifiedProjectile;
 import dev.xkmc.fastprojectileapi.render.ProjectileRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 
-public class ItemLaserRenderer<T extends ItemLaserEntity> extends EntityRenderer<T> implements ProjectileRenderer<T> {
+public class ItemLaserRenderer<T extends ItemLaserEntity> extends EntityRenderer<T, ProjectileEntityRenderState> implements ProjectileRenderer<T> {
 
 	public ItemLaserRenderer(EntityRendererProvider.Context pContext) {
 		super(pContext);
 	}
 
+	@Override
+	public ProjectileEntityRenderState createRenderState() {
+		return new ProjectileEntityRenderState();
+	}
+
+	@Override
+	public void extractRenderState(T e, ProjectileEntityRenderState state, float partialTicks) {
+		super.extractRenderState(e, state, partialTicks);
+		state.projectile = e;
+		state.partialTick = partialTicks;
+	}
+
+	/**
+	 * 26.3: this replaces the old {@code EntityRenderer#render(...)} delegation. Without it the entity
+	 * render path submits no geometry at all and the bullet is invisible (the batch path alone is
+	 * never fed, because the port adds danmaku as real entities instead of sending them through
+	 * {@code DanmakuManager#send}).
+	 */
+	@Override
+	public void submit(ProjectileEntityRenderState state, PoseStack pose, net.minecraft.client.renderer.SubmitNodeCollector collector, net.minecraft.client.renderer.state.level.CameraRenderState camera) {
+		@SuppressWarnings("unchecked")
+		T e = (T) state.projectile;
+		if (e != null) {
+			render(e, state.partialTick, pose);
+		}
+	}
+
+	@Override
 	protected int getBlockLightLevel(T e, BlockPos pPos) {
 		return e.fullBright() ? 15 : super.getBlockLightLevel(e, pPos);
 	}
 
 	@Override
-	public boolean shouldRender(T pLivingEntity, Frustum pCamera, double pCamX, double pCamY, double pCamZ) {
+	protected AABB getBoundingBoxForCulling(T e, float pTick) {
+		var src = e.position().add(0, e.getBbHeight() / 2f, 0);
+		return new AABB(src, src.add(e.getForward().scale(e.getLength()))).inflate(e.getBbWidth() / 2f);
+	}
+
+	@Override
+	public boolean shouldRender(T pLivingEntity, Frustum pCamera, double pCamX, double pCamY, double pCamZ, float pTick) {
 		return true;
 	}
 
 	@Override
 	public double fading(SimplifiedProjectile e) {
-		if (entityRenderDispatcher.camera.getEntity() == e.getOwner() ||
+		if (entityRenderDispatcher.camera.entity() == e.getOwner() ||
 				e instanceof IDanmakuEntity dan && dan.isClientFriendly()) {
 			return DanmakuConfig.CLIENT.selfDanmakuFading.get();
 		}
@@ -44,16 +79,12 @@ public class ItemLaserRenderer<T extends ItemLaserEntity> extends EntityRenderer
 
 	@Override
 	public Quaternionf cameraOrientation() {
-		return entityRenderDispatcher.cameraOrientation();
+		return entityRenderDispatcher.camera.rotation();
 	}
 
 	@Override
-	public Vec3 getRenderOffset(T e, float f) {
-		return new Vec3(0, e.getBbHeight() / 2, 0);
-	}
-
-	public void render(T e, float yaw, float pTick, PoseStack pose, MultiBufferSource buffer, int light) {
-		render(e, pTick, pose);
+	public Vec3 getRenderOffset(ProjectileEntityRenderState state) {
+		return new Vec3(0, state.boundingBoxHeight / 2, 0);
 	}
 
 	@Override
@@ -62,15 +93,15 @@ public class ItemLaserRenderer<T extends ItemLaserEntity> extends EntityRenderer
 		if (e.tickCount < 2) return;
 		pose.pushPose();
 		float scale = e.scale() * e.percentOpen(pTick);
-		pose.mulPose(Axis.YP.rotationDegrees(-e.getViewYRot(pTick)));
-		pose.mulPose(Axis.XP.rotationDegrees(e.getViewXRot(pTick) + 90));
+		pose.rotate(Axis.YP.rotationDegrees(-e.getViewYRot(pTick)));
+		pose.rotate(Axis.XP.rotationDegrees(e.getViewXRot(pTick) + 90));
 		pose.scale(e.getBbWidth() * scale, e.effectiveLength(pTick), e.getBbWidth() * scale);
 		danmaku.getTypeForRender().create(this, e, pose, pTick);
 		pose.popPose();
 	}
 
-	public ResourceLocation getTextureLocation(T pEntity) {
-		return TextureAtlas.LOCATION_BLOCKS;
+	public Identifier getTextureLocation(T pEntity) {
+		return TextureAtlas.LOCATION_ITEMS;
 	}
 
 }

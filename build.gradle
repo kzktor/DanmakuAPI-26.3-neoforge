@@ -1,179 +1,104 @@
 plugins {
     id 'java-library'
-    id 'eclipse'
-    id 'idea'
-    id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.80'
+    id 'net.neoforged.moddev'
 }
 
+group = mod_group_id
 version = mod_version
-group = 'dev.xkmc'
-
-repositories {
-    mavenLocal()
-}
 
 base {
     archivesName = mod_id
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-
-sourceSets {
-    client {}
-    server {}
-    data {}
-    common {}
+// The committed datagen output (item definitions, item models, lang, tags, damages, recipes) ships in
+// the jar, exactly as upstream does. Without this the mod's items have no model or item definition at
+// all, because models/item/*.json and items/*.json both live under src/generated/resources.
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+    exclude '.cache/**'
 }
 
+java.toolchain.languageVersion = JavaLanguageVersion.of(Integer.parseInt(java_version))
+
 neoForge {
-    // We currently only support NeoForge versions later than 21.0.x
-    // See https://projects.neoforged.net/neoforged/neoforge for the latest updates
-    version = "${neo_version}"
-
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
-    }
-
-    // Validate AT files and raise errors when they have invalid targets
-    // This option is false by default, but turning it on is recommended
-    //validateAccessTransformers = true
-    accessTransformers.from "./src/main/resources/META-INF/accesstransformer.cfg"
+    version = project.neo_version
 
     runs {
-        client {
-            client()
-        }
-        data {
-            data()
-
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-
-        }
-        server {
-            server()
-        }
-        gameTestServer {
-            type = "gameTestServer"
-        }
+        client { client() }
+        server { server(); programArgument '--nogui' }
     }
 
     mods {
         "${mod_id}" {
-            sourceSet sourceSets.main
+            sourceSet(sourceSets.main)
         }
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+            mod_authors            : mod_authors,
+            mod_description        : mod_description,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+sourceSets.main.resources.srcDir generateModMetadata
 
-java {
-    withSourcesJar()
+dependencies {
+    implementation project(':l2serial')
+    implementation project(':l2core')
+    implementation project(':registrate')
+    implementation project(':l2damagetracker')
+    implementation project(':l2menustacker')
+    implementation project(':l2tabs')
+    implementation project(':l2library')
+    implementation project(':fast-projectile-api')
+    runtimeOnly project(':l2itemselector')
+    runtimeOnly project(':l2modularblock')
+    // The src/test organizer tools (lang/resource/GUI generators) use Guava and Gson directly.
+    testImplementation 'com.google.guava:guava:33.6.0-jre'
+    testImplementation 'com.google.code.gson:gson:2.13.1'
+    runtimeOnly files(rootProject.file('libs/curios-neoforge-17.0.0-beta.2+26.3-patched.jar'))
+    compileOnly 'mezz.jei:jei-26.3-neoforge-api:31.9.0.56'
+    compileOnly 'com.google.code.findbugs:jsr305:3.0.1'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-Xmaxerrs' << '10000'
+}
+
+// src/test holds the standalone lang/resource/GUI organizer tools, not JUnit tests.
+tasks.named('test') {
+    failOnNoDiscoveredTests = false
 }
 
 tasks.withType(ProcessResources).configureEach {
     var replaceProperties = [
-            minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
-            neo_version         : neo_version, neo_version_range: neo_version_range,
+            minecraft_version   : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version         : neo_version,
+            neo_version_range   : neo_version_range,
             loader_version_range: loader_version_range,
-            mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
-            mod_authors         : mod_authors, mod_description: mod_description,
+            mod_id              : mod_id,
+            mod_name            : mod_name,
+            mod_license         : mod_license,
+            mod_version         : mod_version,
+            mod_authors         : mod_authors,
+            mod_description     : mod_description,
     ]
     inputs.properties replaceProperties
-
     filesMatching(['META-INF/neoforge.mods.toml']) {
         expand replaceProperties + [project: project]
     }
-}
-
-// Example configuration to allow publishing using the maven-publish plugin
-publishing {
-    publications {
-        register('mavenJava', MavenPublication) {
-            from components.java
-        }
-    }
-    repositories {
-        maven {
-            url "file://${project.projectDir}/repo"
-        }
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
-}
-
-jar {
-    manifest {
-        attributes([
-                "Specification-Title"     : "${mod_id}",
-                "Specification-Vendor"    : "xkmc",
-                "Specification-Version"   : "1", // We are version 1 of ourselves
-                "Implementation-Title"    : project.name,
-                "Implementation-Version"  : project.jar.archiveVersion,
-                "Implementation-Vendor"   : "xkmc",
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                'MixinConfigs'            : "${mod_id}.mixins.json"
-        ])
-    }
-}
-
-dependencies {
-    //annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
-    //compileOnly fg.deobf("com.tterrag.registrate:Registrate:${registrate_version}")
-}
-
-// project specific
-
-repositories {
-    flatDir {
-        dirs 'libs'
-    }
-    maven { // Registrate
-        url "https://maven.ithundxr.dev/snapshots"
-    }
-    maven {
-        url = "https://maven.theillusivec4.top/"
-    }
-    maven {
-        // Location of the maven for vazkii's mods
-        name 'blamejared'
-        url 'https://maven.blamejared.com'
-    }
-    maven {
-        url 'https://www.cursemaven.com'
-        content {
-            includeGroup "curse.maven"
-        }
-    }
-    maven {
-        // Location of the maven that hosts JEI files (and TiC)
-        name 'Progwml6 maven'
-        url 'https://dvs1.progwml6.com/files/maven'
-    }
-    mavenLocal();
-}
-
-dependencies {
-    implementation "mezz.jei:jei-${jei_minecraft_version}:${jei_version}"
-    implementation "com.tterrag.registrate:Registrate:${registrate_version}"
-    implementation "dev.xkmc:l2serial:${l2serial_ver}"
-    implementation "dev.xkmc:l2core:${l2core_ver}"
-    implementation "dev.xkmc:fast_projectile_api:${fast_projectile_api_ver}"
-    implementation "dev.xkmc:l2damagetracker:${l2damagetracker_ver}"
-    implementation "dev.xkmc:l2library:${l2library_ver}"
-
-    implementation "dev.xkmc:l2menustacker:${l2menustacker_ver}"
-    implementation "dev.xkmc:l2tabs:${l2tabs_ver}"
-
-
-    implementation "com.tlm:touhoulittlemaid:1.21-release-1.1.12-snapshot4"
-
-    runtimeOnly "dev.xkmc:l2itemselector:${l2itemselector_ver}"
-    runtimeOnly "dev.xkmc:l2modularblocks:${l2modularblocks_ver}"
-
-    testImplementation "com.mojang:datafixerupper:8.0.16"
-    testImplementation "com.google.guava:guava:32.1.2-jre"
 }

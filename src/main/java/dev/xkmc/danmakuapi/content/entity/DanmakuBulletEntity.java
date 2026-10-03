@@ -16,6 +16,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TraceableEntity;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -83,16 +85,18 @@ public class DanmakuBulletEntity extends BaseProjectile implements IDanmakuEntit
 		return life;
 	}
 
-	public void addAdditionalSaveData(CompoundTag nbt) {
+	@Override
+	protected void addAdditionalSaveData(ValueOutput nbt) {
 		super.addAdditionalSaveData(nbt);
-		nbt.put("auto-serial", Objects.requireNonNull(new TagCodec(level().registryAccess()).toTag(new CompoundTag(), this)));
+		nbt.store("auto-serial", CompoundTag.CODEC,
+				Objects.requireNonNull(new TagCodec(level().registryAccess()).toTag(new CompoundTag(), this)));
 	}
 
-	public void readAdditionalSaveData(CompoundTag nbt) {
+	@Override
+	protected void readAdditionalSaveData(ValueInput nbt) {
 		super.readAdditionalSaveData(nbt);
-		if (nbt.contains("auto-serial")) {
-			Wrappers.run(() -> new TagCodec(level().registryAccess()).fromTag(nbt.getCompound("auto-serial"), getClass(), this));
-		}
+		nbt.read("auto-serial", CompoundTag.CODEC).ifPresent(tag ->
+				Wrappers.run(() -> new TagCodec(level().registryAccess()).fromTag(tag, getClass(), this)));
 	}
 
 	@Override
@@ -110,7 +114,7 @@ public class DanmakuBulletEntity extends BaseProjectile implements IDanmakuEntit
 	@Override
 	protected void onHitBlock(BlockHitResult pResult) {
 		super.onHitBlock(pResult);
-		if (!level().isClientSide) {
+		if (!level().isClientSide()) {
 			discard();
 		}
 	}
@@ -127,7 +131,7 @@ public class DanmakuBulletEntity extends BaseProjectile implements IDanmakuEntit
 
 	@Override
 	public void onHitEntity(EntityHitResult result) {
-		if (level().isClientSide) return;
+		if (level().isClientSide()) return;
 		hurtTarget(result);
 		if (!bypassEntity) {
 			discard();

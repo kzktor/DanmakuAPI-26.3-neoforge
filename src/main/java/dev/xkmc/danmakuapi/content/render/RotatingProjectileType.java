@@ -4,29 +4,31 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import dev.xkmc.fastprojectileapi.entity.SimplifiedProjectile;
 import dev.xkmc.fastprojectileapi.render.ProjectileRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
 
 import java.util.List;
 import java.util.function.Consumer;
 
-public record RotatingProjectileType(ResourceLocation tex, DisplayType display, double rot)
+public record RotatingProjectileType(Identifier tex, DisplayType display, double rot)
 		implements RenderableDanmakuType<RotatingProjectileType, RotatingProjectileType.Ins> {
 
 	@Override
-	public void start(MultiBufferSource buffer, List<Ins> list) {
-		BulkDataWriter vc = new BulkDataWriter(buffer.getBuffer(DanmakuRenderStates.danmaku(tex, display())), list.size());
-		for (var e : list) {
-			e.tex(vc);
-		}
-		vc.flush();
+	public void start(SubmitNodeCollector collector, PoseStack pose, List<Ins> list) {
+		collector.submitCustomGeometry(pose, DanmakuRenderStates.danmaku(tex, display()), (entry, vc) -> {
+			BulkDataWriter writer = new BulkDataWriter(vc, list.size());
+			for (var e : list) {
+				e.tex(writer);
+			}
+			writer.flush();
+		});
 	}
 
 	@Override
 	public void create(Consumer<Ins> holder, ProjectileRenderer<?> r, SimplifiedProjectile e, PoseStack pose, float pTick) {
-		pose.mulPose(r.cameraOrientation());
-		pose.mulPose(Axis.ZP.rotationDegrees((e.tickCount + pTick) * 360f / (float) rot));
+		pose.rotate(r.cameraOrientation());
+		pose.rotate(Axis.ZP.rotationDegrees((e.tickCount + pTick) * 360f / (float) rot));
 		var sim4 = new Matrix4f(pose.last().pose());
 		int col = DanmakuRenderStates.fading(display, -1, r, e);
 		holder.accept(new Ins(sim4, col));

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:magenta_pencil"
+        "recipes": "danmaku_api:magenta_pencil"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

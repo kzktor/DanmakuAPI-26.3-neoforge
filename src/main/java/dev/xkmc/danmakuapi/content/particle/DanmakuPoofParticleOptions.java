@@ -11,12 +11,13 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.ExtraCodecs;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 public class DanmakuPoofParticleOptions extends ScalableParticleOptionsBase {
 
 	public static final MapCodec<DanmakuPoofParticleOptions> CODEC =
 			RecordCodecBuilder.mapCodec(i -> i.group(
-					ExtraCodecs.VECTOR3F.fieldOf("color").forGetter((e) -> e.color),
+					ExtraCodecs.VECTOR3F.fieldOf("color").forGetter((e) -> (Vector3fc) e.color),
 					SCALE.fieldOf("scale").forGetter(DanmakuPoofParticleOptions::getScale)
 			).apply(i, DanmakuPoofParticleOptions::new));
 
@@ -27,14 +28,14 @@ public class DanmakuPoofParticleOptions extends ScalableParticleOptionsBase {
 					DanmakuPoofParticleOptions::new);
 
 
-	private final Vector3f color;
+	private final Vector3fc color;
 
-	public DanmakuPoofParticleOptions(Vector3f color, float scale) {
+	public DanmakuPoofParticleOptions(Vector3fc color, float scale) {
 		super(scale);
-		this.color = color;
+		this.color = new Vector3f(color);
 	}
 
-	public Vector3f getColor() {
+	public Vector3fc getColor() {
 		return this.color;
 	}
 

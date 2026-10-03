@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:lime_laser"
+        "recipes": "danmaku_api:lime_laser"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

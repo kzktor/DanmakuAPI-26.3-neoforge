@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "A": {
-      "tag": "danmaku_api:danmaku/star"
-    },
-    "B": {
-      "item": "minecraft:red_dye"
-    }
+    "A": "#danmaku_api:danmaku/star",
+    "B": "minecraft:red_dye"
   },
   "pattern": [
     "AAA",

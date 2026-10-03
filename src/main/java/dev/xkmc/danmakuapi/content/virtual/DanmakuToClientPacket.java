@@ -35,9 +35,9 @@ public record DanmakuToClientPacket(Data[] entities, byte[] data, boolean friend
 
 		public void restore(Entity e) {
 			e.syncPacketPositionCodec(posX, posY, posZ);
-			e.absMoveTo(posX, posY, posZ, yaw, pitch);
+			e.snapTo(posX, posY, posZ, yaw, pitch);
 			e.setId(entityId);
-			e.lerpMotion(velX, velY, velZ);
+			e.lerpMotion(new Vec3(velX, velY, velZ));
 		}
 	}
 
@@ -82,7 +82,7 @@ public record DanmakuToClientPacket(Data[] entities, byte[] data, boolean friend
 		var buffer = Unpooled.wrappedBuffer(data);
 		var buf = new RegistryFriendlyByteBuf(buffer, player.registryAccess(), ConnectionType.NEOFORGE);
 		for (var dat : entities) {
-			var type = BuiltInRegistries.ENTITY_TYPE.getHolder(dat.typeId);
+			var type = BuiltInRegistries.ENTITY_TYPE.get(dat.typeId);
 			if (type.isEmpty()) break;
 			Entity e = DanmakuClientHandler.create(type.get().value());
 			if (!(e instanceof SimplifiedProjectile sp)) break;

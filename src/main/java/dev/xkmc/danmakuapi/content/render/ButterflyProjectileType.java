@@ -4,37 +4,38 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import dev.xkmc.fastprojectileapi.entity.SimplifiedProjectile;
 import dev.xkmc.fastprojectileapi.render.ProjectileRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 
 import java.util.List;
 import java.util.function.Consumer;
 
-public record ButterflyProjectileType(ResourceLocation overlay, DisplayType display, int period)
+public record ButterflyProjectileType(Identifier overlay, DisplayType display, int period)
 		implements RenderableDanmakuType<ButterflyProjectileType, ButterflyProjectileType.Ins> {
 
 	@Override
-	public void start(MultiBufferSource buffer, List<Ins> list) {
-		BulkDataWriter vc;
-		vc = new BulkDataWriter(buffer.getBuffer(DanmakuRenderStates.danmaku(overlay, display())), list.size());
-		for (var e : list) {
-			e.tex(vc);
-		}
-		vc.flush();
+	public void start(SubmitNodeCollector collector, PoseStack pose, List<Ins> list) {
+		collector.submitCustomGeometry(pose, DanmakuRenderStates.danmaku(overlay, display()), (entry, vc) -> {
+			BulkDataWriter writer = new BulkDataWriter(vc, list.size());
+			for (var e : list) {
+				e.tex(writer);
+			}
+			writer.flush();
+		});
 	}
 
 	@Override
 	public void create(Consumer<Ins> holder, ProjectileRenderer<?> r, SimplifiedProjectile e, PoseStack pose, float pTick) {
-		pose.mulPose(Axis.YP.rotationDegrees(-Mth.lerp(pTick, e.yRotO, e.getYRot())));
-		pose.mulPose(Axis.XP.rotationDegrees(Mth.lerp(pTick, e.xRotO, e.getXRot())));
+		pose.rotate(Axis.YP.rotationDegrees(-Mth.lerp(pTick, e.yRotO, e.getYRot())));
+		pose.rotate(Axis.XP.rotationDegrees(Mth.lerp(pTick, e.xRotO, e.getXRot())));
 		float time = Math.abs((e.tickCount + pTick) / period % 1 * 4 - 2) - 1;
 		float angle = 60f;
 		int col = DanmakuRenderStates.fading(display, -1, r, e);
 		{
 			pose.pushPose();
-			pose.mulPose(Axis.ZP.rotationDegrees(time * angle));
+			pose.rotate(Axis.ZP.rotationDegrees(time * angle));
 			PoseStack.Pose mat = pose.last();
 			Matrix4f m4 = new Matrix4f(mat.pose());
 			holder.accept(new Ins(m4, col, false));
@@ -42,7 +43,7 @@ public record ButterflyProjectileType(ResourceLocation overlay, DisplayType disp
 		}
 		{
 			pose.pushPose();
-			pose.mulPose(Axis.ZP.rotationDegrees(time * -angle));
+			pose.rotate(Axis.ZP.rotationDegrees(time * -angle));
 			PoseStack.Pose mat = pose.last();
 			Matrix4f m4 = new Matrix4f(mat.pose());
 			holder.accept(new Ins(m4, col, true));

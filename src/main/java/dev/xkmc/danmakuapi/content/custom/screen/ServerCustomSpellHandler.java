@@ -18,7 +18,7 @@ public class ServerCustomSpellHandler {
 		ItemStack stack = sender.getMainHandItem();
 		if (!stack.is(DanmakuTagGen.CUSTOM_SPELL)) return;
 		if (!(data instanceof ISpellFormData<?> form)) return;
-		var tag = new TagCodec(sender.serverLevel().registryAccess()).valueToTag(Record.class, data);
+		var tag = new TagCodec(sender.level().registryAccess()).valueToTag(Record.class, data);
 		if (tag == null) return;
 		int max = DanmakuConfig.SERVER.customSpellMaxDuration.get();
 		if (form.getDuration() > max) return;

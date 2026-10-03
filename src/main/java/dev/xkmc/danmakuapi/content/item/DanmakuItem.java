@@ -17,7 +17,7 @@ import dev.xkmc.danmakuapi.init.data.DanmakuLang;
 import dev.xkmc.danmakuapi.init.registrate.DanmakuEntities;
 import dev.xkmc.fastprojectileapi.render.ProjTypeHolder;
 import dev.xkmc.fastprojectileapi.render.RenderableProjectileType;
-import dev.xkmc.l2library.content.raytrace.RayTraceUtil;
+import dev.xkmc.l2core.content.raytrace.RayTraceUtil;
 import dev.xkmc.l2serial.util.Wrappers;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,17 +25,18 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForge;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 import static dev.xkmc.danmakuapi.init.registrate.DanmakuItems.Bullet.*;
 
@@ -63,25 +64,25 @@ public class DanmakuItem extends Item {
 	 * that happens to be identical.
 	 */
 	@Override
-	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+	public InteractionResult use(Level level, Player player, InteractionHand hand) {
 		ItemStack stack = player.getItemInHand(hand);
 		if (GrazeHelper.forbidDanmaku(player))
-			return InteractionResultHolder.fail(stack);
+			return InteractionResult.FAIL;
 		var event = new DanmakuUseEvent(player, stack, cooldown());
 		NeoForge.EVENT_BUS.post(event);
 		if (event.isCanceled()) {
-			return InteractionResultHolder.fail(stack);
+			return InteractionResult.FAIL;
 		}
 		playThrowSound(level, player);
-		if (!level.isClientSide) {
+		if (!level.isClientSide()) {
 			spawnBullet(newBullet(player, level), player, level, event);
 		}
 		player.awardStat(Stats.ITEM_USED.get(this));
-		player.getCooldowns().addCooldown(this, event.getCooldown());
+		player.getCooldowns().addCooldown(stack, event.getCooldown());
 		if (consume() && event.consume()) {
 			stack.shrink(1);
 		}
-		return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+		return InteractionResult.SUCCESS;
 	}
 
 	/**
@@ -136,7 +137,7 @@ public class DanmakuItem extends Item {
 		danmaku.setItem(bulletStack(player, event));
 		danmaku.setup(type.damage(), life(), false, type.bypass(),
 				RayTraceUtil.getRayTerm(Vec3.ZERO, player.getXRot(), player.getYRot(), 2));
-		danmaku.moveTo(RayTraceUtil.getRayTerm(player.getEyePosition(), player.getXRot(), player.getYRot(), 2));
+		danmaku.snapTo(RayTraceUtil.getRayTerm(player.getEyePosition(), player.getXRot(), player.getYRot(), 2));
 		level.addFreshEntity(danmaku);
 		if (player instanceof ServerPlayer sp)
 			SpellContainer.track(sp, danmaku);
@@ -149,10 +150,10 @@ public class DanmakuItem extends Item {
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, TooltipContext level, List<Component> list, TooltipFlag flag) {
-		list.add(DanmakuLang.DANMAKU_DAMAGE.get(type.damage()));
+	public void appendHoverText(ItemStack stack, TooltipContext level, TooltipDisplay display, Consumer<Component> list, TooltipFlag flag) {
+		list.accept(DanmakuLang.DANMAKU_DAMAGE.get(type.damage()));
 		if (type.bypass())
-			list.add(DanmakuLang.DANMAKU_BYPASS.get());
+			list.accept(DanmakuLang.DANMAKU_BYPASS.get());
 	}
 
 	/**

@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "A": {
-      "tag": "danmaku_api:danmaku/butterfly"
-    },
-    "B": {
-      "item": "minecraft:purple_dye"
-    }
+    "A": "#danmaku_api:danmaku/butterfly",
+    "B": "minecraft:purple_dye"
   },
   "pattern": [
     "AAA",

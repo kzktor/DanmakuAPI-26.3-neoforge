@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "A": {
-      "tag": "danmaku_api:danmaku/card"
-    },
-    "B": {
-      "item": "minecraft:lime_dye"
-    }
+    "A": "#danmaku_api:danmaku/card",
+    "B": "minecraft:lime_dye"
   },
   "pattern": [
     "AAA",

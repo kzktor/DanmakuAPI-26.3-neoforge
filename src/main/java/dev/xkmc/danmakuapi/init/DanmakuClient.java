@@ -1,8 +1,13 @@
 package dev.xkmc.danmakuapi.init;
 
+import dev.xkmc.danmakuapi.content.entity.ItemBulletEntity;
+import dev.xkmc.danmakuapi.content.entity.ItemBulletRenderer;
+import dev.xkmc.danmakuapi.content.entity.ItemLaserEntity;
+import dev.xkmc.danmakuapi.content.entity.ItemLaserRenderer;
 import dev.xkmc.danmakuapi.content.particle.DanmakuPoofParticle;
 import dev.xkmc.danmakuapi.content.item.DanmakuItemDeco;
 import dev.xkmc.danmakuapi.content.item.SpellItem;
+import dev.xkmc.danmakuapi.init.registrate.DanmakuEntities;
 import dev.xkmc.danmakuapi.init.registrate.DanmakuItems;
 import dev.xkmc.fastprojectileapi.render.ProjectileRenderHelper;
 import net.minecraft.world.item.DyeColor;
@@ -10,10 +15,11 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 
-@EventBusSubscriber(value = Dist.CLIENT, modid = DanmakuAPI.MODID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(value = Dist.CLIENT, modid = DanmakuAPI.MODID)
 public class DanmakuClient {
 
 	@SubscribeEvent
@@ -27,6 +33,20 @@ public class DanmakuClient {
 					e.get(d).get().getTypeForRender();
 			ProjectileRenderHelper.setup();
 		});
+	}
+
+	/**
+	 * Entity renderers live here rather than in Registrate's EntityBuilder#renderer: that call takes
+	 * a lambda whose body constructs a client-only renderer, and verifying the entity registration
+	 * class on the dedicated server loaded net.minecraft.client.renderer.entity.EntityRenderer,
+	 * aborting mod construction. This class is only loaded on the client, so it is safe.
+	 */
+	@SubscribeEvent
+	public static void registerEntityRenderer(EntityRenderersEvent.RegisterRenderers event) {
+		event.registerEntityRenderer(DanmakuEntities.ITEM_DANMAKU.get(),
+				ctx -> new ItemBulletRenderer<ItemBulletEntity>(ctx));
+		event.registerEntityRenderer(DanmakuEntities.ITEM_LASER.get(),
+				ctx -> new ItemLaserRenderer<ItemLaserEntity>(ctx));
 	}
 
 	@SubscribeEvent

@@ -1,5 +1,6 @@
 package dev.xkmc.danmakuapi.content.particle;
 
+import net.minecraft.util.ARGB;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -17,7 +18,7 @@ public class DanmakuParticleHelper {
 			var vec = dir.scale(radius).add(pos);
 			var vel = dir.scale(0.3 * radius);
 			level.addAlwaysVisibleParticle(
-					new DanmakuPoofParticleOptions(Vec3.fromRGB24(col).toVector3f(), 1),
+					new DanmakuPoofParticleOptions(ARGB.vector3fFromRGB24(col), 1),
 					vec.x, vec.y, vec.z, vel.x, vel.y, vel.z);
 		}
 	}
@@ -27,7 +28,7 @@ public class DanmakuParticleHelper {
 		for (int i = 0; i < count; i++) {
 			var vec = pos.add(forward.scale(len * i / count));
 			level.addParticle(
-					new DanmakuPoofParticleOptions(Vec3.fromRGB24(col).toVector3f(), 1),
+					new DanmakuPoofParticleOptions(ARGB.vector3fFromRGB24(col), 1),
 					vec.x, vec.y, vec.z, 0, 0, 0);
 		}
 	}

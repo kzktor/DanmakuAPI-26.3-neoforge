@@ -4,8 +4,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import dev.xkmc.fastprojectileapi.entity.SimplifiedProjectile;
 import dev.xkmc.fastprojectileapi.render.ProjectileRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 
@@ -25,24 +25,26 @@ import java.util.function.Consumer;
  *
  * @param spin ticks per full roll around the flight axis; 0 disables rolling
  */
-public record FlatProjectileType(ResourceLocation tex, DisplayType display, double spin)
+public record FlatProjectileType(Identifier tex, DisplayType display, double spin)
 		implements RenderableDanmakuType<FlatProjectileType, FlatProjectileType.Ins> {
 
 	@Override
-	public void start(MultiBufferSource buffer, List<Ins> list) {
-		BulkDataWriter vc = new BulkDataWriter(buffer.getBuffer(DanmakuRenderStates.danmaku(tex, display())), list.size());
-		for (var e : list) {
-			e.tex(vc);
-		}
-		vc.flush();
+	public void start(SubmitNodeCollector collector, PoseStack pose, List<Ins> list) {
+		collector.submitCustomGeometry(pose, DanmakuRenderStates.danmaku(tex, display()), (entry, vc) -> {
+			BulkDataWriter writer = new BulkDataWriter(vc, list.size());
+			for (var e : list) {
+				e.tex(writer);
+			}
+			writer.flush();
+		});
 	}
 
 	@Override
 	public void create(Consumer<Ins> holder, ProjectileRenderer<?> r, SimplifiedProjectile e, PoseStack pose, float pTick) {
-		pose.mulPose(Axis.YP.rotationDegrees(-Mth.lerp(pTick, e.yRotO, e.getYRot())));
-		pose.mulPose(Axis.XP.rotationDegrees(Mth.lerp(pTick, e.xRotO, e.getXRot())));
+		pose.rotate(Axis.YP.rotationDegrees(-Mth.lerp(pTick, e.yRotO, e.getYRot())));
+		pose.rotate(Axis.XP.rotationDegrees(Mth.lerp(pTick, e.xRotO, e.getXRot())));
 		if (spin > 0) {
-			pose.mulPose(Axis.ZP.rotationDegrees((e.tickCount + pTick) * 360f / (float) spin));
+			pose.rotate(Axis.ZP.rotationDegrees((e.tickCount + pTick) * 360f / (float) spin));
 		}
 		var m4 = new Matrix4f(pose.last().pose());
 		int col = DanmakuRenderStates.fading(display, -1, r, e);

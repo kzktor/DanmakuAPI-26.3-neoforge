@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shapeless",
   "category": "equipment",
   "ingredients": [
-    {
-      "item": "danmaku_api:magenta_ball_danmaku"
-    },
-    {
-      "item": "danmaku_api:magenta_laser"
-    }
+    "danmaku_api:magenta_ball_danmaku",
+    "danmaku_api:magenta_laser"
   ],
   "result": {
     "count": 4,

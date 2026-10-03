@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:yellow_ball_danmaku"
+        "recipes": "danmaku_api:yellow_ball_danmaku"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

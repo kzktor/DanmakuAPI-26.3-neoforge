@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:white_bubble_danmaku"
+        "recipes": "danmaku_api:white_bubble_danmaku"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

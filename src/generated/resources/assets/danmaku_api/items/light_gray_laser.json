@@ -1,0 +1,12 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "danmaku_api:item/light_gray_laser",
+    "tints": [
+      {
+        "type": "minecraft:constant",
+        "value": 11250603
+      }
+    ]
+  }
+}

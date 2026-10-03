@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:yellow_laser"
+        "recipes": "danmaku_api:yellow_laser"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

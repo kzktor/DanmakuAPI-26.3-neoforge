@@ -7,7 +7,6 @@ import dev.xkmc.danmakuapi.content.spell.mover.*;
 import dev.xkmc.fastprojectileapi.entity.ProjectileMovement;
 import dev.xkmc.l2serial.serialization.marker.SerialClass;
 import dev.xkmc.l2serial.serialization.marker.SerialField;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -17,6 +16,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ItemSupplier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 @SerialClass
@@ -79,18 +80,16 @@ public class ItemLaserEntity extends DanmakuLaserEntity implements ItemSupplier 
 	protected void defineSynchedData(SynchedEntityData.Builder builder) {
 	}
 
-	public void addAdditionalSaveData(CompoundTag nbt) {
+	@Override
+	protected void addAdditionalSaveData(ValueOutput nbt) {
 		super.addAdditionalSaveData(nbt);
-		if (!stack.isEmpty()) {
-			nbt.put("Item", stack.save(level().registryAccess()));
-		}
-
+		nbt.store("Item", ItemStack.OPTIONAL_CODEC, stack);
 	}
 
-	public void readAdditionalSaveData(CompoundTag nbt) {
+	@Override
+	protected void readAdditionalSaveData(ValueInput nbt) {
 		super.readAdditionalSaveData(nbt);
-		ItemStack itemstack = ItemStack.parseOptional(level().registryAccess(), nbt.getCompound("Item"));
-		this.setItem(itemstack);
+		nbt.read("Item", ItemStack.OPTIONAL_CODEC).ifPresent(this::setItem);
 	}
 
 	@Override

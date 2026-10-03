@@ -1,73 +1,48 @@
 package dev.xkmc.danmakuapi.content.render;
 
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.xkmc.fastprojectileapi.entity.SimplifiedProjectile;
 import dev.xkmc.fastprojectileapi.render.ProjectileRenderer;
-import net.minecraft.Util;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.RenderType;
+import dev.xkmc.fastprojectileapi.render.ProjectileRenderTypes;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
-import java.util.function.BiFunction;
-import java.util.function.Function;
+/**
+ * 26.3: the old {@code RenderStateShard}/{@code CompositeState}/{@code ShaderStateShard} render type
+ * construction is gone. Danmaku render types are {@code POSITION_TEX_COLOR} textured quads and are now
+ * built from the shared {@link ProjectileRenderTypes} pipelines (culling + blend mode only).
+ */
+public abstract class DanmakuRenderStates {
 
-public abstract class DanmakuRenderStates extends RenderType {
-
-
-	public DanmakuRenderStates(String pName, VertexFormat pFormat, VertexFormat.Mode pMode, int pBufferSize, boolean pAffectsCrumbling, boolean pSortOnUpload, Runnable pSetupState, Runnable pClearState) {
-		super(pName, pFormat, pMode, pBufferSize, pAffectsCrumbling, pSortOnUpload, pSetupState, pClearState);
+	private static ProjectileRenderTypes.Blend blend(DisplayType type) {
+		return switch (type) {
+			case SOLID -> ProjectileRenderTypes.Blend.SOLID;
+			case TRANSPARENT -> ProjectileRenderTypes.Blend.TRANSLUCENT;
+			case ADDITIVE -> ProjectileRenderTypes.Blend.ADDITIVE;
+		};
 	}
 
-	protected static final ShaderStateShard DANMAKU_SHADER = new ShaderStateShard(GameRenderer::getPositionTexColorShader);
-
-	private static RenderType create(String name, ResourceLocation tex, boolean cull, DisplayType type) {
-		return create(name,
-				DefaultVertexFormat.POSITION_TEX_COLOR,
-				VertexFormat.Mode.QUADS,
-				256, true, type != DisplayType.SOLID,
-				CompositeState.builder()
-						.setShaderState(DANMAKU_SHADER)
-						.setTextureState(new TextureStateShard(tex, false, false))
-						.setTransparencyState(switch (type) {
-							case SOLID -> NO_TRANSPARENCY;
-							case TRANSPARENT -> TRANSLUCENT_TRANSPARENCY;
-							case ADDITIVE -> ADDITIVE_TRANSPARENCY;
-						})
-						.setCullState(cull ? CULL : NO_CULL)
-						.createCompositeState(false));
-	}
-
-	private static final BiFunction<ResourceLocation, DisplayType, RenderType> DANMAKU =
-			Util.memoize((rl, type) -> create("danmaku_" + type.getName(), rl, false, type));
-	private static final BiFunction<ResourceLocation, DisplayType, RenderType> LASER =
-			Util.memoize((rl, type) -> create("laser_" + type.getName(), rl, true, type));
-	private static final Function<DisplayType, RenderType> ITEM_MODEL =
-			Util.memoize(type -> create("item_model_" + type.getName(), TextureAtlas.LOCATION_BLOCKS, false, type));
-
-	public static RenderType danmaku(ResourceLocation rl, DisplayType type) {
+	public static RenderType danmaku(Identifier rl, DisplayType type) {
 		if (type == DisplayType.SOLID) type = DisplayType.TRANSPARENT;
-		return DANMAKU.apply(rl, type);
+		return ProjectileRenderTypes.create("danmaku", rl, false, blend(type));
 	}
 
-	public static RenderType laser(ResourceLocation rl, DisplayType type) {
-		return LASER.apply(rl, type);
+	public static RenderType laser(Identifier rl, DisplayType type) {
+		return ProjectileRenderTypes.create("laser", rl, true, blend(type));
 	}
 
 	/**
 	 * Render state for danmaku drawn as a baked item model. Such a model samples the item
-	 * atlas, which in this version is the block atlas, so that is the bound texture.
+	 * atlas, so that is the bound texture.
 	 * <p>
 	 * It keeps {@link com.mojang.blaze3d.vertex.DefaultVertexFormat#POSITION_TEX_COLOR} rather
-	 * than the {@link com.mojang.blaze3d.vertex.DefaultVertexFormat#NEW_ENTITY} vanilla item
+	 * than the {@link com.mojang.blaze3d.vertex.DefaultVertexFormat#ENTITY} vanilla item
 	 * rendering uses: danmaku are always full bright and are shaded per quad into the vertex
-	 * color, so the lightmap, overlay (no glint) and normal attributes can all be dropped,
-	 * cutting a vertex from 40 to 24 bytes.
+	 * color, so the lightmap, overlay (no glint) and normal attributes can all be dropped.
 	 */
 	public static RenderType itemModel(DisplayType type) {
 		if (type == DisplayType.SOLID) type = DisplayType.TRANSPARENT;
-		return ITEM_MODEL.apply(type);
+		return ProjectileRenderTypes.create("item_model", TextureAtlas.LOCATION_ITEMS, false, blend(type));
 	}
 
 	public static int fading(DisplayType display, int col, ProjectileRenderer<?> r, SimplifiedProjectile e) {

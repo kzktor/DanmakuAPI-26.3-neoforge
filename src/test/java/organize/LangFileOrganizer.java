@@ -3,7 +3,6 @@ package organize;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.mojang.datafixers.util.Pair;
 
 import java.io.File;
 import java.io.FileReader;
@@ -41,24 +40,24 @@ public class LangFileOrganizer extends ResourceOrganizer {
 						boolean reverse = block.has("reverse") && block.get("reverse").getAsBoolean();
 						boolean dot = block.has("use_dot") && block.get("use_dot").getAsBoolean();
 						String con = dot ? "." : "_";
-						List<Pair<String, String>> map = new ArrayList<>();
+						List<Map.Entry<String, String>> map = new ArrayList<>();
 						for (JsonElement vector : block.get("list").getAsJsonArray()) {
 							if (map.isEmpty()) {
-								List<Pair<String, String>> finalMap = map;
+								List<Map.Entry<String, String>> finalMap = map;
 								vector.getAsJsonObject().entrySet().forEach(ent1 ->
-										finalMap.add(Pair.of(ent1.getKey(), ent1.getValue().getAsString())));
+										finalMap.add(Map.entry(ent1.getKey(), ent1.getValue().getAsString())));
 							} else {
 								map = map.stream().flatMap(ent1 -> vector.getAsJsonObject().entrySet().stream()
-												.map(ent2 -> Pair.of(ent1.getFirst().length() == 0 ? ent2.getKey() :
+												.map(ent2 -> Map.entry(ent1.getKey().length() == 0 ? ent2.getKey() :
 																ent2.getKey().contains("*") ?
-																		ent2.getKey().replaceFirst("\\*", ent1.getFirst()) :
-																		ent1.getFirst() + con + ent2.getKey(),
-														merge(reverse, ent1.getSecond(), ent2.getValue().getAsString()))))
+																		ent2.getKey().replaceFirst("\\*", ent1.getKey()) :
+																		ent1.getKey() + con + ent2.getKey(),
+														merge(reverse, ent1.getValue(), ent2.getValue().getAsString()))))
 										.collect(Collectors.toList());
 							}
 						}
-						for (Pair<String, String> pair : map) {
-							dst_json.addProperty((path.isEmpty() ? "" : path + ".") + pair.getFirst(), pair.getSecond());
+						for (Map.Entry<String, String> pair : map) {
+							dst_json.addProperty((path.isEmpty() ? "" : path + ".") + pair.getKey(), pair.getValue());
 						}
 
 					});

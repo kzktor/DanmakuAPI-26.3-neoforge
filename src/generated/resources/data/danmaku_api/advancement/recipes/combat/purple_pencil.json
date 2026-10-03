@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "danmaku_api:purple_pencil"
+        "recipes": "danmaku_api:purple_pencil"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

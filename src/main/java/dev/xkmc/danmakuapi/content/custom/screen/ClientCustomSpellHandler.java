@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component;
 public class ClientCustomSpellHandler {
 
 	public static void open(Component title, ISpellFormData<?> data) {
-		Minecraft.getInstance().setScreen(new EditorScreen(title, data));
+		Minecraft.getInstance().setScreenAndShow(new EditorScreen(title, data));
 	}
 
 	public static void sendToPlayer(ISpellFormData<?> val) {
